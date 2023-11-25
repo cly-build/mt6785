@@ -60,6 +60,14 @@ config CPU_FREQ_DEFAULT_GOV_PERFORMANCE
 	  the frequency statically to the highest frequency supported by
 	  the CPU.
 
+config CPU_FREQ_DEFAULT_GOV_RAD
+	bool "neo rad"
+	select CPU_FREQ_GOV_RAD
+	help
+	  Use the CPUFreq governor 'performance' as default. This sets
+	  the frequency statically to the highest frequency supported by
+	  the CPU.
+
 config CPU_FREQ_DEFAULT_GOV_POWERSAVE
 	bool "powersave"
 	select CPU_FREQ_GOV_POWERSAVE
@@ -132,6 +140,17 @@ config CPU_FREQ_GOV_PERFORMANCE
 	  module will be called cpufreq_performance.
 
 	  If in doubt, say Y.
+
+config CPU_FREQ_GOV_RAD
+	tristate "'neo rad' governor"
+	help
+	  This cpufreq governor sets the frequency statically to the
+	  highest available CPU frequency.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_rad.
+
+	  If in doubt, say Y.	  
 
 config CPU_FREQ_GOV_POWERSAVE
 	tristate "'powersave' governor"
