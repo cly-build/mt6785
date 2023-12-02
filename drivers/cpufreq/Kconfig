@@ -61,7 +61,7 @@ config CPU_FREQ_DEFAULT_GOV_PERFORMANCE
 	  the CPU.
 
 config CPU_FREQ_DEFAULT_GOV_RAD
-	bool "neo rad"
+	bool "neorad"
 	select CPU_FREQ_GOV_RAD
 	help
 	  Use the CPUFreq governor 'performance' as default. This sets
