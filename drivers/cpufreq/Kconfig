@@ -142,7 +142,7 @@ config CPU_FREQ_GOV_PERFORMANCE
 	  If in doubt, say Y.
 
 config CPU_FREQ_GOV_RAD
-	tristate "'neo rad' governor"
+	tristate "'neorad' governor"
 	help
 	  This cpufreq governor sets the frequency statically to the
 	  highest available CPU frequency.
