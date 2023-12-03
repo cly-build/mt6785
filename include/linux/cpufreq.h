@@ -530,35 +530,50 @@ unsigned int cpufreq_policy_transition_delay_us(struct cpufreq_policy *policy);
 int cpufreq_register_governor(struct cpufreq_governor *governor);
 void cpufreq_unregister_governor(struct cpufreq_governor *governor);
 
-/* CPUFREQ DEFAULT GOVERNOR */
-/*
- * Performance governor is fallback governor if any other gov failed to auto
- * load due latency restrictions
- */
-#ifdef CONFIG_CPU_FREQ_GOV_PERFORMANCE
-extern struct cpufreq_governor cpufreq_gov_performance;
-#endif
-#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_performance)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_POWERSAVE)
-extern struct cpufreq_governor cpufreq_gov_powersave;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_powersave)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE)
-extern struct cpufreq_governor cpufreq_gov_userspace;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_userspace)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND)
-extern struct cpufreq_governor cpufreq_gov_ondemand;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_ondemand)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_CONSERVATIVE)
-extern struct cpufreq_governor cpufreq_gov_conservative;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_conservative)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTERACTIVE)
-extern struct cpufreq_governor cpufreq_gov_interactive;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_interactive)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ZZMOOVE)
-extern struct cpufreq_governor cpufreq_gov_zzmoove;
-#define CPUFREQ_DEFAULT_GOVERNOR       (&cpufreq_gov_zzmoove)
-#endif
+struct cpufreq_governor *cpufreq_default_governor(void);
+struct cpufreq_governor *cpufreq_fallback_governor(void);
+
+static inline void cpufreq_policy_apply_limits(struct cpufreq_policy *policy)
+{
+	if (policy->max < policy->cur)
+		__cpufreq_driver_target(policy, policy->max, CPUFREQ_RELATION_H);
+	else if (policy->min > policy->cur)
+		__cpufreq_driver_target(policy, policy->min, CPUFREQ_RELATION_L);
+}
+
+/* Governor attribute set */
+struct gov_attr_set {
+	struct kobject kobj;
+	struct list_head policy_list;
+	struct mutex update_lock;
+	int usage_count;
+};
+
+/* sysfs ops for cpufreq governors */
+extern const struct sysfs_ops governor_sysfs_ops;
+
+void gov_attr_set_init(struct gov_attr_set *attr_set, struct list_head *list_node);
+void gov_attr_set_get(struct gov_attr_set *attr_set, struct list_head *list_node);
+unsigned int gov_attr_set_put(struct gov_attr_set *attr_set, struct list_head *list_node);
+
+/* Governor sysfs attribute */
+struct governor_attr {
+	struct attribute attr;
+	ssize_t (*show)(struct gov_attr_set *attr_set, char *buf);
+	ssize_t (*store)(struct gov_attr_set *attr_set, const char *buf,
+			 size_t count);
+};
+
+static inline bool cpufreq_can_do_remote_dvfs(struct cpufreq_policy *policy)
+{
+	/*
+	 * Allow remote callbacks if:
+	 * - dvfs_possible_from_any_cpu flag is set
+	 * - the local and remote CPUs share cpufreq policy
+	 */
+	return policy->dvfs_possible_from_any_cpu ||
+		cpumask_test_cpu(smp_processor_id(), policy->cpus);
+}
 
 /*********************************************************************
  *                     FREQUENCY TABLE HELPERS                       *
